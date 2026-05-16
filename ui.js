@@ -1,8 +1,5 @@
-// UI: обробники подій, рендер таблиці компонентів, Гантт-діаграми та графіків (SVG).
-
 const $ = id => document.getElementById(id);
 
-// перемикання вкладок
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -45,7 +42,6 @@ function readComponentsTable() {
   return { t, u };
 }
 
-// "1→3, 2→4\n3→5" → [[1,3],[2,4],[3,5]]
 function parseDependencies(text, n) {
   if (!text) return [];
   const parts = text.split(/[,\n]/).map(s => s.trim()).filter(s => s.length > 0);
@@ -82,8 +78,6 @@ function setCurrentInstance(inst) {
   $("inp-dependencies").value = formatDependencies(inst.P);
 }
 
-// Кнопки на вкладці «Індивідуальна задача»
-
 $("inp-n").addEventListener("change", () => {
   const n = parseInt($("inp-n").value, 10);
   if (n >= 1) renderComponentsTable(n);
@@ -101,7 +95,6 @@ $("btn-generate").addEventListener("click", () => {
 });
 
 $("btn-load-example").addEventListener("click", () => {
-  // приклад з п. 2.4 курсової (n=6) — для перевірки що ЖА видає Z=159
   const inst = {
     n: 6, m: 2,
     t: [0, 3, 2, 6, 1, 4, 2],
@@ -177,7 +170,7 @@ function renderSolution(title, res, inst) {
   `;
 }
 
-// Гантт-діаграма (SVG)
+// Гантт-діаграма (SVG, без бібліотек)
 function renderGantt(S, inst) {
   const m = S.length;
   const totalT = Math.max(1, ...S.flatMap(Sj => Sj.map(([, , T]) => T)));
@@ -201,7 +194,6 @@ function renderGantt(S, inst) {
     }
   }
 
-  // вісь часу
   const yAxis = padT + m * (rowH + rowGap) + 6;
   rects.push(`<line x1="${padL}" y1="${yAxis}" x2="${W - padR}" y2="${yAxis}" stroke="#333"/>`);
   const step = Math.max(1, Math.ceil(totalT / 15));
@@ -215,12 +207,11 @@ function renderGantt(S, inst) {
   return `<svg viewBox="0 0 ${W} ${H + 25}" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;">${rects.join("")}</svg>`;
 }
 
-// Вкладка «Експерименти»
-
 $("sel-experiment").addEventListener("change", () => {
   const t = $("sel-experiment").value;
   if (t === "N") $("exp-values").value = "10, 20, 50, 100, 200, 500, 1000";
   else if (t === "beta") $("exp-values").value = "0, 0.5, 1, 2, 3, 5, 10";
+  else if (t === "m") $("exp-values").value = "2, 3, 4, 5";
   else $("exp-values").value = "10, 20, 30, 50, 75, 100";
 });
 
@@ -238,7 +229,6 @@ $("btn-run-experiment").addEventListener("click", () => {
 
   $("exp-progress").textContent = "Виконується експеримент… (це може зайняти кілька секунд)";
 
-  // через setTimeout щоб встиг відмалюватись текст про прогрес
   setTimeout(() => {
     let result;
     try {
@@ -246,6 +236,7 @@ $("btn-run-experiment").addEventListener("click", () => {
       else if (type === "beta") result = runExperimentBeta({ ...cfg, betaSet: values });
       else if (type === "dim_acc") result = runExperimentDimAccuracy({ ...cfg, nSet: values.map(v => Math.round(v)) });
       else if (type === "dim_time") result = runExperimentDimTime({ ...cfg, nSet: values.map(v => Math.round(v)) });
+      else if (type === "m") result = runExperimentM({ ...cfg, mSet: values.map(v => Math.round(v)) });
 
       lastExperimentResult = result;
       $("btn-export-csv").disabled = false;
@@ -272,7 +263,6 @@ function renderExperimentResult(res) {
   $("exp-results-area").innerHTML = tableHtml + chart1 + chart2;
 }
 
-// Лінійний графік (SVG)
 function renderLineChart(data) {
   const W = 700, H = 320, padL = 60, padR = 20, padT = 30, padB = 50;
   const series = data.series ? data.series : [{ name: data.yLabel, points: data.points }];

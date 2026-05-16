@@ -1,12 +1,7 @@
-// Чотири експерименти за п. 3.3 курсової: вплив N, β, n на точність і час.
-// Кожна функція повертає { type, title, header, rows, chartData[, chartData2] }.
-
-// Експеримент 3.3.2 — вплив параметра N на середнє Z і τ
 function runExperimentN(cfg) {
   const { n, m, beta, D, K, Nset } = cfg;
   const rows = [];
 
-  // одна спільна серія ІЗ для всіх N (інакше порівняння буде некоректне)
   const instances = [];
   for (let r = 0; r < K; r++) {
     instances.push(generateInstance(n, m, [1, 10], [1, 10], D));
@@ -38,7 +33,6 @@ function runExperimentN(cfg) {
   };
 }
 
-// Експеримент 3.3.3 — вплив параметра β на середнє Z
 function runExperimentBeta(cfg) {
   const { n, m, N, D, K, betaSet } = cfg;
   const rows = [];
@@ -70,7 +64,6 @@ function runExperimentBeta(cfg) {
   };
 }
 
-// Експеримент 3.3.4а — вплив n на точність (порівняння Z для ЖА і СЖВ + gap)
 function runExperimentDimAccuracy(cfg) {
   const { m, beta, N, D, K, nSet } = cfg;
   const rows = [];
@@ -107,7 +100,6 @@ function runExperimentDimAccuracy(cfg) {
   };
 }
 
-// Експеримент 3.3.4б — вплив n на час роботи
 function runExperimentDimTime(cfg) {
   const { m, beta, N, D, K, nSet } = cfg;
   const rows = [];
@@ -133,6 +125,44 @@ function runExperimentDimTime(cfg) {
         { name: "ЖА", points: rows.map(r => ({ x: r[0], y: parseFloat(r[1]) })) },
         { name: "СЖВ", points: rows.map(r => ({ x: r[0], y: parseFloat(r[2]) })) }
       ]
+    }
+  };
+}
+
+function runExperimentM(cfg) {
+  const { n, beta, N, D, K, mSet } = cfg;
+  const rows = [];
+
+  for (const m of mSet) {
+    let sumZG = 0, sumZS = 0, sumTS = 0;
+    for (let r = 0; r < K; r++) {
+      const inst = generateInstance(n, m, [1, 10], [1, 10], D);
+      sumZG += greedyAlgorithm(inst).Z;
+      const s = stochasticGreedyAlgorithm(inst, beta, N);
+      sumZS += s.Z;
+      sumTS += s.timeMs;
+    }
+    const avgZG = sumZG / K;
+    const avgZS = sumZS / K;
+    const gap = avgZG > 0 ? ((avgZG - avgZS) / avgZG) * 100 : 0;
+    rows.push([m, avgZG.toFixed(2), avgZS.toFixed(2), gap.toFixed(2), (sumTS / K).toFixed(3)]);
+  }
+
+  return {
+    type: "m",
+    title: "Експеримент — вплив кількості виконавців m",
+    header: ["m", "Zсер ЖА", "Zсер СЖВ", "gap, %", "τсер СЖВ, мс"],
+    rows,
+    chartData: {
+      xLabel: "m", yLabel: "Zсер",
+      series: [
+        { name: "ЖА", points: rows.map(r => ({ x: r[0], y: parseFloat(r[1]) })) },
+        { name: "СЖВ", points: rows.map(r => ({ x: r[0], y: parseFloat(r[2]) })) }
+      ]
+    },
+    chartData2: {
+      xLabel: "m", yLabel: "gap, %",
+      points: rows.map(r => ({ x: r[0], y: parseFloat(r[3]) }))
     }
   };
 }

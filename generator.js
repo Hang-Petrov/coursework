@@ -1,7 +1,3 @@
-// Генератор ІЗ. Тривалості tᵢ і пріоритети uᵢ — випадкові цілі з [1, 10].
-// P формується випадково: дуги тільки від меншого індексу до більшого
-// (крч гарантія відсутності замкнених послідовностей передувань, не чіпати).
-
 function randInt(a, b) {
   return a + Math.floor(Math.random() * (b - a + 1));
 }
@@ -27,7 +23,6 @@ function generateInstance(n, m, tRange = [1, 10], uRange = [1, 10], p = 0.3) {
   return { n, m, t, u, P };
 }
 
-// Перевірка коректності P (для введення користувача): топологічне сортування Куна
 function isAcyclic(n, P) {
   const succ = Array.from({ length: n + 1 }, () => []);
   const indeg = Array(n + 1).fill(0);
